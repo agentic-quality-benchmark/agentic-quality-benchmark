@@ -83,7 +83,7 @@ Be respectful. Be constructive. Focus on the work.
 ## Development Setup
 
 ```bash
-git clone https://github.com/agentic-quality-benchmark/aqb.git
+git clone https://github.com/agentic-quality-benchmark/agentic-quality-benchmark.git
 cd aqb
 npm install
 npm run build

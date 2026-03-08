@@ -133,7 +133,7 @@ See [leaderboard/](leaderboard/) or visit the [live leaderboard](#) (coming soon
   title={AQB: A Multi-Domain Benchmark for Evaluating Agentic Quality Engineering},
   author={Dragan Spiridonov},
   year={2026},
-  url={https://github.com/agentic-quality-benchmark/aqb}
+  url={https://github.com/agentic-quality-benchmark/agentic-quality-benchmark}
 }
 ```
 
