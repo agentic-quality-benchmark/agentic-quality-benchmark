@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use AQB in your research, please cite it as below."
+title: "AQB: A Multi-Domain Benchmark for Evaluating Agentic Quality Engineering"
+type: dataset
+authors:
+  - family-names: Spiridonov
+    given-names: Dragan
+    orcid: ""
+date-released: "2026-03-08"
+url: "https://github.com/agentic-quality-benchmark/aqb"
+license:
+  - MIT
+  - CC-BY-4.0
+keywords:
+  - benchmark
+  - quality engineering
+  - AI agents
+  - software testing
+  - static analysis
+  - defect prediction
+  - test generation

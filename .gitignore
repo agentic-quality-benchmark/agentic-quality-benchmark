@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.*
+*.log
+.DS_Store
+coverage/
+.vscode/settings.json
+
+# Held-out corpus (never committed to public repo)
+corpus/held-out/*
+!corpus/held-out/.gitkeep

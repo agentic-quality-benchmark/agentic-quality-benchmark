@@ -1,0 +1,65 @@
+{
+  "version": "0.1.0",
+  "created": "2026-03-08",
+  "description": "AQB Corpus v0.1 - Initial release (security domain MVP)",
+  "domains": {
+    "security": {
+      "categories": [
+        "sql-injection",
+        "xss",
+        "hardcoded-secrets",
+        "path-traversal",
+        "command-injection",
+        "crypto-weakness",
+        "ssrf"
+      ],
+      "target_samples": 200,
+      "current_samples": 0,
+      "status": "in-progress"
+    },
+    "defects": {
+      "categories": [
+        "null-deref",
+        "race-condition",
+        "off-by-one",
+        "resource-leak",
+        "state-corruption",
+        "type-confusion"
+      ],
+      "target_samples": 150,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "test-generation": {
+      "categories": [
+        "functions-with-edge-cases",
+        "mutation-seeded-variants",
+        "tdd-scenarios"
+      ],
+      "target_samples": 120,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "fabrication-stress-test": {
+      "categories": [
+        "provably-correct-code",
+        "trivially-simple-code",
+        "formally-verified",
+        "expert-reviewed-clean"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    }
+  },
+  "languages": {
+    "typescript": "35%",
+    "python": "25%",
+    "java": "15%",
+    "go": "15%",
+    "other": "10%"
+  },
+  "total_target_samples": 1680,
+  "total_current_samples": 0,
+  "held_out_percentage": 30
+}
