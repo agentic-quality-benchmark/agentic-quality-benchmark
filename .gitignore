@@ -11,3 +11,5 @@ coverage/
 # Held-out corpus (never committed to public repo)
 corpus/held-out/*
 !corpus/held-out/.gitkeep
+.claude-flow/
+.agentic-qe/
