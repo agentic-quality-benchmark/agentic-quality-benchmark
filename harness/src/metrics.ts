@@ -108,7 +108,7 @@ export function computeDomainMetrics(
   for (const domain of domains) {
     const domainTP = true_positives.filter(tp => tp.finding.domain === domain);
     const domainFP = false_positives.filter(fp => fp.finding.domain === domain);
-    const domainFN = false_negatives.filter(fn => fn.ground_truth.type.startsWith('CWE-') ? domain === 'security' : true);
+    const domainFN = false_negatives.filter(fn => fn.domain === domain);
 
     const tp = domainTP.length;
     const fp = domainFP.length;

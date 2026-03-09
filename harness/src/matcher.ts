@@ -32,6 +32,7 @@ const DEFAULT_CONFIG: MatcherConfig = {
   overlapThreshold: 0.5,
   partialMatchWeight: 0.5,
   categoryAliases: {
+    // Original 7 aliases
     'CWE-89': ['sql-injection', 'sqli'],
     'CWE-79': ['xss', 'cross-site-scripting'],
     'CWE-78': ['command-injection', 'os-injection'],
@@ -39,6 +40,27 @@ const DEFAULT_CONFIG: MatcherConfig = {
     'CWE-798': ['hardcoded-secrets', 'hardcoded-credentials'],
     'CWE-327': ['crypto-weakness', 'weak-cryptography'],
     'CWE-918': ['ssrf', 'server-side-request-forgery'],
+    // Extended aliases per ADR-005
+    'CWE-20': ['input-validation', 'improper-input-validation'],
+    'CWE-77': ['command-injection-generic'],
+    'CWE-94': ['code-injection'],
+    'CWE-119': ['buffer-overflow', 'buffer-overrun'],
+    'CWE-125': ['out-of-bounds-read', 'buffer-over-read'],
+    'CWE-190': ['integer-overflow', 'integer-wrap'],
+    'CWE-200': ['information-exposure', 'info-leak'],
+    'CWE-269': ['privilege-escalation', 'improper-privilege'],
+    'CWE-287': ['improper-authentication', 'auth-bypass'],
+    'CWE-306': ['missing-authentication'],
+    'CWE-352': ['csrf', 'cross-site-request-forgery'],
+    'CWE-416': ['use-after-free', 'dangling-pointer'],
+    'CWE-434': ['unrestricted-upload', 'file-upload'],
+    'CWE-476': ['null-pointer-dereference', 'null-deref'],
+    'CWE-502': ['deserialization', 'insecure-deserialization'],
+    'CWE-611': ['xxe', 'xml-external-entity'],
+    'CWE-732': ['incorrect-permission', 'permission-assignment'],
+    'CWE-787': ['out-of-bounds-write', 'buffer-overflow-write'],
+    'CWE-862': ['missing-authorization', 'authz-missing'],
+    'CWE-863': ['incorrect-authorization', 'authz-incorrect'],
   },
 };
 
@@ -98,7 +120,7 @@ export function matchFindings(
   // Remaining unmatched ground truth = false negatives
   const false_negatives: MissedIssue[] = groundTruth
     .filter((_, i) => !matched_gt_indices.has(i))
-    .map(gt => ({ ground_truth: gt, sample_id: sample.id }));
+    .map(gt => ({ ground_truth: gt, sample_id: sample.id, domain: sample.domain }));
 
   return { true_positives, false_positives, false_negatives };
 }
@@ -208,7 +230,33 @@ function computeCategoryScore(
 }
 
 function domainFromType(type: string): string {
+  // Security: all CWE-prefixed types
   if (type.startsWith('CWE-')) return 'security';
+  // Defects: common bug pattern types
   if (['null-deref', 'race-condition', 'off-by-one', 'resource-leak', 'state-corruption', 'type-confusion'].includes(type)) return 'defects';
+  // Test generation
+  if (['mutation-score', 'edge-case', 'coverage-gap-test', 'tdd-scenario'].includes(type) || type.startsWith('mutation-')) return 'test-generation';
+  // Coverage analysis
+  if (['uncovered-branch', 'uncovered-function', 'dead-code', 'coverage-gap'].includes(type) || type.startsWith('coverage-')) return 'coverage-analysis';
+  // Requirements
+  if (['ambiguity', 'incompleteness', 'inconsistency', 'untestable'].includes(type) || type.startsWith('requirement-')) return 'requirements';
+  // Contract testing
+  if (['breaking-change', 'schema-violation', 'api-incompatibility', 'contract-drift'].includes(type) || type.startsWith('contract-')) return 'contracts';
+  // Code quality
+  if (['code-smell', 'complexity', 'duplication', 'maintainability'].includes(type) || type.startsWith('quality-')) return 'quality';
+  // Accessibility
+  if (['wcag-violation', 'aria-misuse', 'contrast-failure', 'keyboard-trap'].includes(type) || type.startsWith('a11y-')) return 'accessibility';
+  // Performance
+  if (['latency-regression', 'memory-leak', 'cpu-bottleneck', 'n-plus-one'].includes(type) || type.startsWith('perf-')) return 'performance';
+  // Chaos/resilience
+  if (['cascade-failure', 'single-point-failure', 'timeout-handling', 'circuit-breaker'].includes(type) || type.startsWith('chaos-') || type.startsWith('fault-')) return 'chaos-resilience';
+  // Code intelligence
+  if (['impact-prediction', 'dependency-risk', 'coupling-violation', 'change-propagation'].includes(type) || type.startsWith('code-intel-')) return 'code-intelligence';
+  // Enterprise integration
+  if (['protocol-violation', 'schema-mismatch', 'message-format', 'compliance-gap'].includes(type) || type.startsWith('integration-')) return 'enterprise-integration';
+  // Flaky tests
+  if (['non-deterministic', 'timing-dependent', 'order-dependent', 'resource-contention'].includes(type) || type.startsWith('flaky-')) return 'flaky-tests';
+  // Visual regression
+  if (['layout-shift', 'visual-diff', 'screenshot-mismatch', 'responsive-break'].includes(type) || type.startsWith('visual-')) return 'visual-regression';
   return 'unknown';
 }

@@ -87,7 +87,7 @@ export interface SampleMetadata {
   sourcing_method: SourcingMethod;
   human_verified: boolean;
   verification_date: string;
-  verified_by?: string[];
+  verified_by: string[];   // Minimum 2 reviewers required per ADR-002
 }
 
 // ─── Findings ───────────────────────────────────────────────────────────────
@@ -140,6 +140,7 @@ export interface UnmatchedFinding {
 export interface MissedIssue {
   ground_truth: GroundTruthIssue;
   sample_id: string;
+  domain: Domain;
 }
 
 // ─── Results ────────────────────────────────────────────────────────────────

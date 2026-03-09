@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
   "created": "2026-03-08",
-  "description": "AQB Corpus v0.1 - Initial release (security domain MVP)",
+  "description": "AQB Corpus v0.1 - Initial release with all 14 QE domains",
   "domains": {
     "security": {
       "categories": [
@@ -37,6 +37,127 @@
         "tdd-scenarios"
       ],
       "target_samples": 120,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "coverage-analysis": {
+      "categories": [
+        "uncovered-branch",
+        "uncovered-function",
+        "dead-code",
+        "coverage-gap"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "quality": {
+      "categories": [
+        "code-smell",
+        "complexity",
+        "duplication",
+        "maintainability"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "requirements": {
+      "categories": [
+        "ambiguity",
+        "incompleteness",
+        "inconsistency",
+        "untestable"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "code-intelligence": {
+      "categories": [
+        "impact-prediction",
+        "dependency-risk",
+        "coupling-violation",
+        "change-propagation"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "contracts": {
+      "categories": [
+        "breaking-change",
+        "schema-violation",
+        "api-incompatibility",
+        "contract-drift"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "accessibility": {
+      "categories": [
+        "wcag-violation",
+        "aria-misuse",
+        "contrast-failure",
+        "keyboard-trap"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "performance": {
+      "categories": [
+        "latency-regression",
+        "memory-leak",
+        "cpu-bottleneck",
+        "n-plus-one"
+      ],
+      "target_samples": 100,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "chaos-resilience": {
+      "categories": [
+        "cascade-failure",
+        "single-point-failure",
+        "timeout-handling",
+        "circuit-breaker"
+      ],
+      "target_samples": 80,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "enterprise-integration": {
+      "categories": [
+        "protocol-violation",
+        "schema-mismatch",
+        "message-format",
+        "compliance-gap"
+      ],
+      "target_samples": 80,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "flaky-tests": {
+      "categories": [
+        "non-deterministic",
+        "timing-dependent",
+        "order-dependent",
+        "resource-contention"
+      ],
+      "target_samples": 80,
+      "current_samples": 0,
+      "status": "planned"
+    },
+    "visual-regression": {
+      "categories": [
+        "layout-shift",
+        "visual-diff",
+        "screenshot-mismatch",
+        "responsive-break"
+      ],
+      "target_samples": 70,
       "current_samples": 0,
       "status": "planned"
     },

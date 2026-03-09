@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs pre-bash",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs pre-bash",
             "timeout": 5000
           }
         ]
@@ -60,7 +60,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs pre-edit",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs pre-edit",
             "timeout": 5000
           }
         ]
@@ -105,7 +105,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs post-edit",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs post-edit",
             "timeout": 10000
           }
         ]
@@ -115,7 +115,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs post-bash",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs post-bash",
             "timeout": 5000
           }
         ]
@@ -136,7 +136,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs route",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs route",
             "timeout": 10000
           }
         ]
@@ -157,7 +157,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/brain-checkpoint.cjs verify --json",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/brain-checkpoint.cjs verify --json",
             "timeout": 5000,
             "continueOnError": true
           }
@@ -167,12 +167,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs session-restore",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs session-restore",
             "timeout": 15000
           },
           {
             "type": "command",
-            "command": "node .claude/helpers/auto-memory-hook.mjs import",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/auto-memory-hook.mjs import",
             "timeout": 8000
           }
         ]
@@ -193,7 +193,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/brain-checkpoint.cjs export --json",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/brain-checkpoint.cjs export --json",
             "timeout": 60000,
             "continueOnError": true
           }
@@ -203,8 +203,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/auto-memory-hook.mjs sync",
-            "timeout": 10000
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/auto-memory-hook.mjs sync",
+            "timeout": 10000,
+            "continueOnError": true
           }
         ]
       }
@@ -214,7 +215,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs session-end",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs session-end",
             "timeout": 10000
           }
         ]
@@ -226,11 +227,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs compact-manual"
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs compact-manual"
           },
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs session-end",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs session-end",
             "timeout": 5000
           }
         ]
@@ -240,11 +241,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs compact-auto"
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs compact-auto"
           },
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs session-end",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs session-end",
             "timeout": 6000
           }
         ]
@@ -255,7 +256,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs status",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs status",
             "timeout": 3000
           }
         ]
@@ -266,7 +267,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs post-task",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs post-task",
             "timeout": 5000
           }
         ]
@@ -277,7 +278,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/helpers/hook-handler.cjs notify",
+            "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/hook-handler.cjs notify",
             "timeout": 3000
           }
         ]
@@ -286,7 +287,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "node .claude/helpers/statusline-v3.cjs 2>/dev/null || .claude/statusline-v3.sh 2>/dev/null || echo \"▊ Agentic QE v3\"",
+    "command": "cd /workspaces/agentic-quality-benchmark && node .claude/helpers/statusline-v3.cjs 2>/dev/null || .claude/statusline-v3.sh 2>/dev/null || echo \"▊ Agentic QE v3\"",
     "refreshMs": 5000,
     "enabled": true
   },
