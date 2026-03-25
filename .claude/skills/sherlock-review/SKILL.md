@@ -15,7 +15,6 @@ trust_tier: 2
 validation:
   schema_path: schemas/output.json
   validator_path: scripts/validate-config.json
-
 ---
 
 # Sherlock Review
@@ -100,6 +99,9 @@ npm test -- --coverage
 ### Recommendations
 1. [Action based on findings]
 ```
+
+## Minimum Findings Enforcement
+Every investigation MUST surface at least 3 weighted observations (CRITICAL=3, HIGH=2, MEDIUM=1, LOW=0.5). Elementary observations count at INFORMATIONAL=0.25 weight. A Sherlock investigation that finds nothing is a failed investigation -- Holmes always finds clues.
 
 ---
 

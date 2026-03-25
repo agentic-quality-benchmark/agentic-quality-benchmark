@@ -11,7 +11,6 @@ last_optimized: 2025-12-02
 dependencies: []
 quick_reference_card: true
 tags: [accessibility, wcag, a11y, screen-reader, ada, section-508, inclusive]
-
 # ADR-056 Trust Tier 3 Validation Stack
 trust_tier: 3
 validation:
@@ -21,6 +20,8 @@ validation:
 ---
 
 # Accessibility Testing
+
+> **Consolidated**: For comprehensive WCAG auditing with multi-tool testing (axe-core + pa11y + Lighthouse), video accessibility, and remediation, prefer [`/a11y-ally`](../a11y-ally/). This skill provides a quick reference card for basic accessibility testing patterns.
 
 <default_to_action>
 When testing accessibility or ensuring compliance:

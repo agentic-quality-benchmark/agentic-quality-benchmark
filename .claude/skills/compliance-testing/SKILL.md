@@ -11,7 +11,6 @@ last_optimized: 2025-12-02
 dependencies: []
 quick_reference_card: true
 tags: [compliance, gdpr, hipaa, pci-dss, ccpa, soc2, privacy, audit]
-
 # ADR-056 Validation Stack Configuration
 trust_tier: 3
 validation:
@@ -230,3 +229,11 @@ const complianceFleet = await FleetManager.coordinate({
 **Audit trail everything.** Every access to sensitive data, every consent, every deletion must be logged with timestamps and user IDs.
 
 **With Agents:** Agents validate compliance requirements continuously, detect violations early, and generate audit-ready reports. Catch compliance issues in development, not in audits.
+
+## Gotchas
+
+- Agent checks GDPR consent flow but misses data retention — always verify deletion/anonymization actually works
+- Compliance reports with "100% compliant" are suspicious — no real system is fully compliant, verify each claim
+- Agent may test US regulations only — explicitly specify jurisdiction (EU, CA, etc.) for correct requirements
+- PII in test data is itself a compliance violation — never use production PII, use synthetic generators
+- Audit trail gaps are invisible until audit time — verify logging exists for EVERY data access, not just writes

@@ -1,12 +1,11 @@
 ---
-name: "QE Test Generation"
-description: "AI-powered test generation using pattern recognition, code analysis, and intelligent test synthesis for comprehensive test coverage."
+name: "qe-test-generation"
+description: "Generates unit, integration, and e2e tests from code analysis including branch coverage, error paths, and edge cases. Use when creating tests for new or changed code, filling coverage gaps, or migrating test suites between Jest, Vitest, and Playwright."
 trust_tier: 3
 validation:
   schema_path: schemas/output.json
   validator_path: scripts/validate-config.json
   eval_path: evals/qe-test-generation.yaml
-
 ---
 
 # QE Test Generation
@@ -139,6 +138,20 @@ quality_checks:
     branches: 80
     statements: 85
 ```
+
+## Skill Composition
+
+- **After generating tests** → Run `/mutation-testing` to verify test quality
+- **Before generating** → Use `/test-automation-strategy` to choose framework and patterns
+- **Related** → `/qe-coverage-analysis` to find where tests are needed most
+
+## Gotchas
+
+- Agent truncates output on files >3000 lines — scope generation to individual modules, not entire directories
+- Components that pass unit tests individually may have zero integration wiring — always generate at least one integration test per module boundary
+- When generating tests for a new codebase, check which framework is installed (jest vs vitest vs mocha) — they have different mock APIs and Claude will use the wrong one
+- Completion theater: agent may claim "comprehensive tests generated" but leave stubs or hardcoded values — always run the generated tests before accepting
+- Fleet must be initialized before using QE agents: run `npx ruflo doctor --fix` if you get "Fleet not initialized"
 
 ## Coordination
 

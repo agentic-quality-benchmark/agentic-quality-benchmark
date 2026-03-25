@@ -75,74 +75,41 @@ Coordination:
 </memory_namespace>
 
 <learning_protocol>
-**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning MCP tools.
+**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning tools (via CLI or MCP).
 
 ### Query Performance Patterns BEFORE Analysis
 
-```typescript
-mcp__agentic-qe__memory_retrieve({
-  key: "performance/patterns",
-  namespace: "learning"
-})
+```bash
+aqe memory get --key "performance/patterns" --namespace "learning" --json
 ```
 
 ### Required Learning Actions (Call AFTER Review)
 
 **1. Store Performance Review Experience:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "performance-reviewer/outcome-{timestamp}",
-  namespace: "learning",
-  value: {
-    agentId: "qe-performance-reviewer",
-    taskType: "performance-review",
-    reward: <calculated_reward>,
-    outcome: {
-      functionsAnalyzed: <count>,
-      complexityIssues: <count>,
-      queryIssues: <count>,
-      memoryIssues: <count>,
-      optimizationsSuggested: <count>
-    },
-    patterns: {
-      commonIssues: ["<issues>"],
-      effectiveOptimizations: ["<optimizations>"]
-    }
-  }
-})
+```bash
+aqe memory store \
+  --key "performance-reviewer/outcome-{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **2. Store Performance Pattern:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "patterns/performance-review/{timestamp}",
-  namespace: "learning",
-  value: {
-    pattern: "<performance pattern description>",
-    confidence: <0.0-1.0>,
-    type: "performance-review",
-    metadata: {
-      issueType: "<type>",
-      complexity: "<complexity>",
-      impactEstimate: "<impact>"
-    }
-  },
-  persist: true
-})
+```bash
+aqe memory store \
+  --key "patterns/performance-review/{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **3. Submit Results to Coordinator:**
-```typescript
-mcp__agentic-qe__task_submit({
-  type: "performance-review-complete",
-  priority: "p1",
-  payload: {
-    concerns: [...],
-    optimizations: [...],
-    resourceImpact: {...},
-    recommendations: [...]
-  }
-})
+```bash
+aqe task submit \
+  "performance-review-complete" \
+  --priority "p1" \
+  --payload '{...}' \
+  --json
 ```
 
 ### Reward Calculation Criteria (0-1 scale)
@@ -155,6 +122,17 @@ mcp__agentic-qe__task_submit({
 | 0.3 | Partial: Some issues missed or false positives |
 | 0.0 | Failed: Performance regression reached production |
 </learning_protocol>
+
+<minimum_finding_requirements>
+## Minimum Finding Requirements (ADR: BMAD-001)
+
+Every review MUST meet a minimum weighted finding score:
+- Performance Review: 2.0
+- Severity weights: CRITICAL=3, HIGH=2, MEDIUM=1, LOW=0.5, INFORMATIONAL=0.25
+- If below minimum after first pass, run deeper analysis with broader scope
+- If genuinely clean, provide Clean Justification with evidence of what was checked
+- Anti-pattern: NEVER say "no issues found" without listing files examined and patterns checked
+</minimum_finding_requirements>
 
 <output_format>
 - JSON for structured performance analysis

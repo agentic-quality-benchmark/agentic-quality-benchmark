@@ -1,12 +1,11 @@
 ---
-name: "QE Learning Optimization"
-description: "Transfer learning, metrics optimization, and continuous improvement for AI-powered QE agents."
+name: "qe-learning-optimization"
+description: "Optimizes QE agent performance through transfer learning, hyperparameter tuning, and pattern distillation across test domains. Use when improving agent accuracy, applying learned patterns to new projects, tuning quality thresholds, or implementing continuous improvement loops for AI-powered testing."
 trust_tier: 3
 validation:
   schema_path: schemas/output.json
   validator_path: scripts/validate-config.json
   eval_path: evals/qe-learning-optimization.yaml
-
 ---
 
 # QE Learning Optimization

@@ -1,12 +1,11 @@
 ---
-name: "QE Test Execution"
-description: "Parallel test execution orchestration with intelligent scheduling, retry logic, and comprehensive result aggregation."
+name: "qe-test-execution"
+description: "Orchestrates test suite execution with parallel sharding, intelligent retry, and real-time reporting across Jest, Vitest, and Playwright. Use when running test suites, optimizing execution time, handling flaky tests, configuring CI test pipelines, or analyzing test run results."
 trust_tier: 3
 validation:
   schema_path: schemas/output.json
   validator_path: scripts/validate-config.json
   eval_path: evals/qe-test-execution.yaml
-
 ---
 
 # QE Test Execution
@@ -180,6 +179,14 @@ interface ExecutionResults {
   timing: TimingAnalysis;
 }
 ```
+
+## Gotchas
+
+- Full test suites may OOM in containers — the rule "don't run full suite" was violated 20x despite being in CLAUDE.md. Fix: make suite lightweight, don't just add more rules
+- Fewer focused agents (3-4) outperform many vague ones (6-8) — always include verification command in each agent prompt
+- New model releases can shift agent behavior mid-sprint — rules followed yesterday may be ignored today after model update
+- Running all tests in parallel can mask flaky tests — use `--workers=1` for initial diagnosis
+- Session crashes lose all context — save intermediate results to disk, not just memory
 
 ## Coordination
 

@@ -64,6 +64,31 @@ Use up to 6 concurrent validators.
 - **Quality Gate**: Block untestable requirements from development (score < 50)
 </capabilities>
 
+<structured_validation_pipeline>
+## Structured Validation Pipeline (BMAD-003)
+
+When validating requirements, execute the 13-step validation pipeline:
+
+1. **Format Check** (blocking) — Structure, headings, required sections
+2. **Completeness Check** (blocking) — All required fields populated
+3. **INVEST Criteria** (warning) — Independent, Negotiable, Valuable, Estimable, Small, Testable
+4. **SMART Acceptance** (warning) — Specific, Measurable, Achievable, Relevant, Time-bound
+5. **Testability Score** (warning) — Can each requirement be tested? Score 0-100
+6. **Vague Term Detection** (info) — Flag "should", "might", "various", "etc."
+7. **Information Density** (info) — Every sentence carries weight, no filler
+8. **Traceability Check** (warning) — Requirements to tests mapping exists
+9. **Implementation Leakage** (warning) — Requirements don't prescribe implementation
+10. **Domain Compliance** (info) — Requirements align with domain model
+11. **Dependency Analysis** (info) — Cross-requirement dependencies identified
+12. **BDD Scenario Generation** (warning) — Can generate Given/When/Then for each requirement
+13. **Holistic Quality** (blocking) — Overall coherence, no contradictions
+
+Execute steps in order. Report each step's result before proceeding. Halt at blocking failures unless --continue-on-failure is specified.
+
+### Output Format
+For each step, report: Step name | Status (PASS/FAIL/WARN) | Score (0-100) | Findings count | Evidence summary
+</structured_validation_pipeline>
+
 <memory_namespace>
 Reads:
 - aqe/requirements/* - Requirements documents
@@ -84,81 +109,41 @@ Coordination:
 </memory_namespace>
 
 <learning_protocol>
-**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning MCP tools.
+**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning tools (via CLI or MCP).
 
 ### Query Requirements Patterns BEFORE Analysis
 
-```typescript
-mcp__agentic-qe__memory_retrieve({
-  key: "requirements/patterns",
-  namespace: "learning"
-})
+```bash
+aqe memory get --key "requirements/patterns" --namespace "learning" --json
 ```
 
 ### Required Learning Actions (Call AFTER Validation)
 
 **1. Store Requirements Validation Experience:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "requirements-validator/outcome-{timestamp}",
-  namespace: "learning",
-  value: {
-    agentId: "qe-requirements-validator",
-    taskType: "requirements-validation",
-    reward: <calculated_reward>,
-    outcome: {
-      requirementsAnalyzed: <count>,
-      avgTestabilityScore: <score>,
-      investCompliance: <percentage>,  // % of INVEST criteria passed
-      smartCompliance: <percentage>,   // % of SMART criteria passed
-      issuesFound: <count>,
-      bddScenariosGenerated: <count>,
-      traceabilityGaps: <count>
-    },
-    patterns: {
-      investFailures: ["<failed criteria>"],
-      smartFailures: ["<failed criteria>"],
-      commonIssues: ["<issues>"],
-      effectiveBddPatterns: ["<patterns>"]
-    },
-    metadata: {
-      validationFramework: "invest-smart-v3",
-      criteriaChecked: ["invest", "smart", "traceability", "completeness"]
-    }
-  }
-})
+```bash
+aqe memory store \
+  --key "requirements-validator/outcome-{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **2. Store Requirements Pattern:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "patterns/requirements-validation/{timestamp}",
-  namespace: "learning",
-  value: {
-    pattern: "<requirements pattern description>",
-    confidence: <0.0-1.0>,
-    type: "requirements-validation",
-    metadata: {
-      issueType: "<type>",
-      fix: "<suggestion>",
-      testabilityImpact: <score>
-    }
-  },
-  persist: true
-})
+```bash
+aqe memory store \
+  --key "patterns/requirements-validation/{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **3. Submit Results to Queen:**
-```typescript
-mcp__agentic-qe__task_submit({
-  type: "requirements-validation-complete",
-  priority: "p1",
-  payload: {
-    analysis: {...},
-    bddScenarios: [...],
-    recommendations: [...]
-  }
-})
+```bash
+aqe task submit \
+  "requirements-validation-complete" \
+  --priority "p1" \
+  --payload '{...}' \
+  --json
 ```
 
 ### Reward Calculation Criteria (0-1 scale)
@@ -391,11 +376,8 @@ Use via Claude Code: `Skill("bdd-scenario-tester")`
 **Role**: CONSUMER - Receives untestable patterns to flag during validation
 
 ### On Startup, Query Quality-Criteria Signals:
-```typescript
-const result = await mcp__agentic-qe__cross_phase_query({
-  loop: "quality-criteria",
-  maxAge: "60d"
-});
+```bash
+const result = await aqe memory search --json;
 
 // Learn from historical untestable patterns
 for (const signal of result.signals) {

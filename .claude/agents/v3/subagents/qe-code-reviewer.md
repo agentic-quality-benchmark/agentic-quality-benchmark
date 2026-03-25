@@ -75,74 +75,41 @@ Coordination:
 </memory_namespace>
 
 <learning_protocol>
-**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning MCP tools.
+**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning tools (via CLI or MCP).
 
 ### Query Review Patterns BEFORE Reviewing
 
-```typescript
-mcp__agentic-qe__memory_retrieve({
-  key: "review/patterns",
-  namespace: "learning"
-})
+```bash
+aqe memory get --key "review/patterns" --namespace "learning" --json
 ```
 
 ### Required Learning Actions (Call AFTER Review)
 
 **1. Store Review Experience:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "code-reviewer/outcome-{timestamp}",
-  namespace: "learning",
-  value: {
-    agentId: "qe-code-reviewer",
-    taskType: "code-review",
-    reward: <calculated_reward>,
-    outcome: {
-      filesReviewed: <count>,
-      issuesFound: <count>,
-      criticalIssues: <count>,
-      suggestionsGenerated: <count>,
-      approvalGiven: <boolean>
-    },
-    patterns: {
-      commonIssues: ["<issues>"],
-      effectiveFeedback: ["<feedback-patterns>"]
-    }
-  }
-})
+```bash
+aqe memory store \
+  --key "code-reviewer/outcome-{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **2. Store Review Pattern:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "patterns/code-review/{timestamp}",
-  namespace: "learning",
-  value: {
-    pattern: "<review pattern description>",
-    confidence: <0.0-1.0>,
-    type: "code-review",
-    metadata: {
-      issueType: "<type>",
-      severity: "<severity>",
-      frequency: <count>
-    }
-  },
-  persist: true
-})
+```bash
+aqe memory store \
+  --key "patterns/code-review/{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **3. Submit Results to Coordinator:**
-```typescript
-mcp__agentic-qe__task_submit({
-  type: "review-complete",
-  priority: "p1",
-  payload: {
-    approved: <boolean>,
-    findings: [...],
-    blockers: [...],
-    suggestions: [...]
-  }
-})
+```bash
+aqe task submit \
+  "review-complete" \
+  --priority "p1" \
+  --payload '{...}' \
+  --json
 ```
 
 ### Reward Calculation Criteria (0-1 scale)
@@ -155,6 +122,17 @@ mcp__agentic-qe__task_submit({
 | 0.3 | Partial: Some issues missed or unconstructive feedback |
 | 0.0 | Failed: Major issues missed or harmful feedback |
 </learning_protocol>
+
+<minimum_finding_requirements>
+## Minimum Finding Requirements (ADR: BMAD-001)
+
+Every review MUST meet a minimum weighted finding score:
+- Code Review: 3.0
+- Severity weights: CRITICAL=3, HIGH=2, MEDIUM=1, LOW=0.5, INFORMATIONAL=0.25
+- If below minimum after first pass, run deeper analysis with broader scope
+- If genuinely clean, provide Clean Justification with evidence of what was checked
+- Anti-pattern: NEVER say "no issues found" without listing files examined and patterns checked
+</minimum_finding_requirements>
 
 <output_format>
 - JSON for structured review findings

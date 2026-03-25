@@ -1,12 +1,11 @@
 ---
-name: "QE Defect Intelligence"
-description: "AI-powered defect prediction, pattern learning, and root cause analysis for proactive quality management."
+name: "qe-defect-intelligence"
+description: "Predicts defect-prone code using change frequency, complexity metrics, and historical bug patterns. Use when predicting defects before they escape, analyzing root causes of test failures, learning from past defect patterns, or implementing proactive quality management."
 trust_tier: 3
 validation:
   schema_path: schemas/output.json
   validator_path: scripts/validate-config.json
   eval_path: evals/qe-defect-intelligence.yaml
-
 ---
 
 # QE Defect Intelligence

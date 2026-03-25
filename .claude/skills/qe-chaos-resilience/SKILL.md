@@ -1,12 +1,11 @@
 ---
-name: "QE Chaos Resilience"
-description: "Chaos engineering and resilience testing including fault injection, load testing, and system recovery validation."
+name: "qe-chaos-resilience"
+description: "Injects controlled faults (network partition, latency, process kill, disk pressure) into distributed systems and validates recovery behavior. Use when testing circuit breakers, failover paths, retry logic, or building confidence in system resilience through chaos engineering."
 trust_tier: 3
 validation:
   schema_path: schemas/output.json
   validator_path: scripts/validate-config.json
   eval_path: evals/qe-chaos-resilience.yaml
-
 ---
 
 # QE Chaos Resilience
@@ -241,4 +240,4 @@ await resilienceTester.validateSLA({
 
 **Primary Agents**: qe-chaos-engineer, qe-load-tester, qe-resilience-tester
 **Coordinator**: qe-chaos-coordinator
-**Related Skills**: qe-performance, qe-security-compliance
+**Related Skills**: qe-performance, security-testing

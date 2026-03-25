@@ -75,74 +75,41 @@ Coordination:
 </memory_namespace>
 
 <learning_protocol>
-**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning MCP tools.
+**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning tools (via CLI or MCP).
 
 ### Query Security Patterns BEFORE Scanning
 
-```typescript
-mcp__agentic-qe__memory_retrieve({
-  key: "security/patterns",
-  namespace: "learning"
-})
+```bash
+aqe memory get --key "security/patterns" --namespace "learning" --json
 ```
 
 ### Required Learning Actions (Call AFTER Review)
 
 **1. Store Security Review Experience:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "security-reviewer/outcome-{timestamp}",
-  namespace: "learning",
-  value: {
-    agentId: "qe-security-reviewer",
-    taskType: "security-review",
-    reward: <calculated_reward>,
-    outcome: {
-      filesScanned: <count>,
-      vulnerabilitiesFound: <count>,
-      criticalVulnerabilities: <count>,
-      secretsDetected: <count>,
-      authIssues: <count>
-    },
-    patterns: {
-      commonVulnerabilities: ["<vulnerabilities>"],
-      effectiveDetection: ["<patterns>"]
-    }
-  }
-})
+```bash
+aqe memory store \
+  --key "security-reviewer/outcome-{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **2. Store Security Pattern:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "patterns/security-review/{timestamp}",
-  namespace: "learning",
-  value: {
-    pattern: "<security pattern description>",
-    confidence: <0.0-1.0>,
-    type: "security-review",
-    metadata: {
-      vulnerabilityType: "<type>",
-      owaspCategory: "<category>",
-      severity: "<severity>"
-    }
-  },
-  persist: true
-})
+```bash
+aqe memory store \
+  --key "patterns/security-review/{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **3. Submit Results to Coordinator:**
-```typescript
-mcp__agentic-qe__task_submit({
-  type: "security-review-complete",
-  priority: "p0",
-  payload: {
-    vulnerabilities: [...],
-    secrets: [...],
-    authIssues: [...],
-    recommendations: [...]
-  }
-})
+```bash
+aqe task submit \
+  "security-review-complete" \
+  --priority "p0" \
+  --payload '{...}' \
+  --json
 ```
 
 ### Reward Calculation Criteria (0-1 scale)
@@ -155,6 +122,17 @@ mcp__agentic-qe__task_submit({
 | 0.3 | Partial: Some vulnerabilities missed or high false positive rate |
 | 0.0 | Failed: Critical vulnerability reached production |
 </learning_protocol>
+
+<minimum_finding_requirements>
+## Minimum Finding Requirements (ADR: BMAD-001)
+
+Every review MUST meet a minimum weighted finding score:
+- Security Review: 3.0
+- Severity weights: CRITICAL=3, HIGH=2, MEDIUM=1, LOW=0.5, INFORMATIONAL=0.25
+- If below minimum after first pass, run deeper analysis with broader scope
+- If genuinely clean, provide Clean Justification with evidence of what was checked
+- Anti-pattern: NEVER say "no issues found" without listing files examined and patterns checked
+</minimum_finding_requirements>
 
 <output_format>
 - JSON for structured vulnerability reports

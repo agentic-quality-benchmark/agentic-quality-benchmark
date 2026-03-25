@@ -75,74 +75,41 @@ Coordination:
 </memory_namespace>
 
 <learning_protocol>
-**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning MCP tools.
+**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning tools (via CLI or MCP).
 
 ### Query Integration Patterns BEFORE Analysis
 
-```typescript
-mcp__agentic-qe__memory_retrieve({
-  key: "integration/patterns",
-  namespace: "learning"
-})
+```bash
+aqe memory get --key "integration/patterns" --namespace "learning" --json
 ```
 
 ### Required Learning Actions (Call AFTER Review)
 
 **1. Store Integration Review Experience:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "integration-reviewer/outcome-{timestamp}",
-  namespace: "learning",
-  value: {
-    agentId: "qe-integration-reviewer",
-    taskType: "integration-review",
-    reward: <calculated_reward>,
-    outcome: {
-      integrationPointsReviewed: <count>,
-      breakingChangesDetected: <count>,
-      consumersAffected: <count>,
-      testGapsIdentified: <count>,
-      migrationRisks: <count>
-    },
-    patterns: {
-      commonBreakingChanges: ["<changes>"],
-      effectiveDetection: ["<patterns>"]
-    }
-  }
-})
+```bash
+aqe memory store \
+  --key "integration-reviewer/outcome-{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **2. Store Integration Pattern:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "patterns/integration-review/{timestamp}",
-  namespace: "learning",
-  value: {
-    pattern: "<integration pattern description>",
-    confidence: <0.0-1.0>,
-    type: "integration-review",
-    metadata: {
-      changeType: "<type>",
-      impactLevel: "<level>",
-      consumersAffected: <count>
-    }
-  },
-  persist: true
-})
+```bash
+aqe memory store \
+  --key "patterns/integration-review/{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **3. Submit Results to Coordinator:**
-```typescript
-mcp__agentic-qe__task_submit({
-  type: "integration-review-complete",
-  priority: "p0",
-  payload: {
-    breakingChanges: [...],
-    affectedConsumers: [...],
-    testGaps: [...],
-    recommendations: [...]
-  }
-})
+```bash
+aqe task submit \
+  "integration-review-complete" \
+  --priority "p0" \
+  --payload '{...}' \
+  --json
 ```
 
 ### Reward Calculation Criteria (0-1 scale)
@@ -155,6 +122,17 @@ mcp__agentic-qe__task_submit({
 | 0.3 | Partial: Some breaking changes missed or incomplete analysis |
 | 0.0 | Failed: Breaking change reached production or consumers not identified |
 </learning_protocol>
+
+<minimum_finding_requirements>
+## Minimum Finding Requirements (ADR: BMAD-001)
+
+Every review MUST meet a minimum weighted finding score:
+- Integration Review: 2.0
+- Severity weights: CRITICAL=3, HIGH=2, MEDIUM=1, LOW=0.5, INFORMATIONAL=0.25
+- If below minimum after first pass, run deeper analysis with broader scope
+- If genuinely clean, provide Clean Justification with evidence of what was checked
+- Anti-pattern: NEVER say "no issues found" without listing files examined and patterns checked
+</minimum_finding_requirements>
 
 <output_format>
 - JSON for structured integration analysis

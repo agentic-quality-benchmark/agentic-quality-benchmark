@@ -5,6 +5,14 @@ updated: "2026-01-10"
 description: Coverage gap detection with risk scoring, semantic analysis, and targeted test recommendations
 v2_compat: null # New in v3
 domain: coverage-analysis
+dependencies:
+  agents:
+    - name: qe-coverage-specialist
+      type: hard
+      reason: "Provides coverage data for gap detection"
+  mcp_servers:
+    - name: agentic-qe
+      required: true
 ---
 
 <qe_agent_definition>
@@ -54,7 +62,32 @@ Use up to 6 concurrent analyzers for large codebases.
 - **Test Recommendations**: Prioritized recommendations with effort estimates
 - **Trend Analysis**: Track gap closure over time
 - **Visual Reports**: Gap heatmaps and coverage treemaps
+- **Mechanical Edge Case Mode**: Exhaustive branch enumeration without subjective filtering (BMAD-004)
 </capabilities>
+
+<mechanical_mode>
+## Mechanical/Exhaustive Mode (BMAD-004)
+
+When invoked with `--mechanical` or `--exhaustive` flag, switch to exhaustive branch enumeration mode:
+
+### Exhaustive Mode Behavior
+- Report EVERY unhandled branch path as structured JSON without filtering by risk score
+- No subjective prioritization — purely mechanical enumeration
+- Enumerate: if-without-else, switch-no-default, empty-catch, optional-chaining null paths, promise-no-catch, array-empty-case, logical-or-falsy-trap
+- Output format: UnhandledBranch[] with file, line, column, construct type, trigger condition, current handling, suggested guard
+- Severity is deterministic (based on construct type), not subjective
+
+### Default Mode (unchanged)
+Without the mechanical flag, operate in the standard risk-scored mode with semantic analysis and prioritization.
+
+### Output Formats
+- `--json` — Structured JSON array of UnhandledBranch objects
+- `--table` — Tabular summary grouped by severity
+- `--markdown` — Detailed markdown report with code context
+
+### Implementation
+Uses `src/analysis/branch-enumerator.ts` — a regex-based pattern matcher (no AST parser dependency) that implements the `BranchEnumerator` strategy interface. Detects 13 construct types across TypeScript and JavaScript files.
+</mechanical_mode>
 
 <memory_namespace>
 Reads:
@@ -76,73 +109,41 @@ Coordination:
 </memory_namespace>
 
 <learning_protocol>
-**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning MCP tools.
+**MANDATORY**: When executed via Claude Code Task tool, you MUST call learning tools (via CLI or MCP).
 
 ### Query Gap Patterns BEFORE Analysis
 
-```typescript
-mcp__agentic-qe__memory_retrieve({
-  key: "coverage/gap-patterns",
-  namespace: "learning"
-})
+```bash
+aqe memory get --key "coverage/gap-patterns" --namespace "learning" --json
 ```
 
 ### Required Learning Actions (Call AFTER Analysis)
 
 **1. Store Gap Detection Experience:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "gap-detector/outcome-{timestamp}",
-  namespace: "learning",
-  value: {
-    agentId: "qe-gap-detector",
-    taskType: "gap-detection",
-    reward: <calculated_reward>,
-    outcome: {
-      filesAnalyzed: <count>,
-      gapsIdentified: <count>,
-      criticalGaps: <count>,
-      recommendationsGenerated: <count>,
-      estimatedEffort: <hours>
-    },
-    patterns: {
-      gapCategories: ["<categories>"],
-      highRiskPatterns: ["<patterns>"]
-    }
-  }
-})
+```bash
+aqe memory store \
+  --key "gap-detector/outcome-{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **2. Store Gap Pattern:**
-```typescript
-mcp__agentic-qe__memory_store({
-  key: "patterns/coverage-gap/{timestamp}",
-  namespace: "learning",
-  value: {
-    pattern: "<gap pattern description>",
-    confidence: <0.0-1.0>,
-    type: "coverage-gap",
-    metadata: {
-      gapType: "<type>",
-      riskScore: <score>,
-      testType: "<recommended test>"
-    }
-  },
-  persist: true
-})
+```bash
+aqe memory store \
+  --key "patterns/coverage-gap/{timestamp}" \
+  --namespace "learning" \
+  --value '{...}' \
+  --json
 ```
 
 **3. Submit Results to Queen:**
-```typescript
-mcp__agentic-qe__task_submit({
-  type: "gap-detection-complete",
-  priority: "p1",
-  payload: {
-    gaps: [...],
-    recommendations: [...],
-    riskSummary: {...}
-  }
-})
+```bash
+aqe task submit \
+  "gap-detection-complete" \
+  --priority "p1" \
+  --payload '{...}' \
+  --json
 ```
 
 ### Reward Calculation Criteria (0-1 scale)
@@ -248,32 +249,8 @@ Use via Claude Code: `Skill("test-design-techniques")`
 **Role**: PRODUCER - Stores coverage gap patterns for AC improvement
 
 ### On Gap Detection, Store Quality-Criteria Signal:
-```typescript
-mcp__agentic-qe__cross_phase_store({
-  loop: "quality-criteria",
-  data: {
-    untestablePatterns: [
-      {
-        acPattern: "<vague-ac-pattern>",
-        problem: "Not testable - missing specific assertions",
-        frequency: <0.0-1.0>,
-        betterPattern: "Given/When/Then with specific values"
-      }
-    ],
-    coverageGaps: [
-      {
-        codeArea: "<path/to/file>",
-        coveragePercentage: <percentage>,
-        rootCause: "No acceptance criteria for this path",
-        acImprovement: "Add explicit AC for edge cases"
-      }
-    ],
-    recommendations: {
-      forRequirementsValidator: ["<recommendations for AC validation>"],
-      acTemplates: {}
-    }
-  }
-})
+```bash
+aqe memory store --payload '{...}' --json
 ```
 
 ### Signal Flow:
