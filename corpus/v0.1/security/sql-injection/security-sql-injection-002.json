@@ -1,0 +1,58 @@
+{
+  "id": "security-sql-injection-002",
+  "domain": "security",
+  "category": "sql-injection",
+  "language": "python",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "app/repositories/order_repository.py",
+      "content": "import sqlite3\nfrom typing import Optional, List, Dict, Any\nfrom app.models.order import Order\nfrom app.config import DATABASE_PATH\n\n\nclass OrderRepository:\n    def __init__(self):\n        self.conn = sqlite3.connect(DATABASE_PATH)\n        self.conn.row_factory = sqlite3.Row\n\n    def find_by_status(self, status: str) -> List[Dict[str, Any]]:\n        \"\"\"Find orders by status. Status is validated upstream.\"\"\"\n        cursor = self.conn.cursor()\n        # Developer assumed status is validated by the caller\n        query = \"SELECT * FROM orders WHERE status = '{}' ORDER BY created_at DESC\".format(status)\n        cursor.execute(query)\n        return [dict(row) for row in cursor.fetchall()]\n\n    def search_orders(self, customer_id: int, filters: Dict[str, str]) -> List[Dict[str, Any]]:\n        \"\"\"Search orders with dynamic filter support.\"\"\"\n        cursor = self.conn.cursor()\n        base_query = \"SELECT * FROM orders WHERE customer_id = ?\"\n        params = [customer_id]\n\n        if 'date_from' in filters:\n            base_query += \" AND created_at >= '\" + filters['date_from'] + \"'\"\n\n        if 'date_to' in filters:\n            base_query += \" AND created_at <= '\" + filters['date_to'] + \"'\"\n\n        cursor.execute(base_query, params)\n        return [dict(row) for row in cursor.fetchall()]\n\n    def close(self):\n        self.conn.close()\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-89",
+        "severity": "critical",
+        "location": {
+          "file": "app/repositories/order_repository.py",
+          "line_start": 16,
+          "line_end": 16
+        },
+        "description": "Status parameter inserted into SQL query using str.format() without parameterization, despite comment claiming upstream validation",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-89",
+        "severity": "critical",
+        "location": {
+          "file": "app/repositories/order_repository.py",
+          "line_start": 27,
+          "line_end": 27
+        },
+        "description": "Filter value 'date_from' concatenated directly into SQL query string, bypassing the parameterized base query pattern",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-89",
+        "severity": "critical",
+        "location": {
+          "file": "app/repositories/order_repository.py",
+          "line_start": 30,
+          "line_end": 30
+        },
+        "description": "Filter value 'date_to' concatenated directly into SQL query string, bypassing the parameterized base query pattern",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "security-xss-002",
+  "domain": "security",
+  "category": "xss",
+  "language": "python",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "app/views/search.py",
+      "content": "from flask import Flask, request, render_template_string, escape\nfrom app.models import SearchResult\nfrom app.services.search_engine import perform_search\n\napp = Flask(__name__)\n\n\n@app.route('/search')\ndef search():\n    query = request.args.get('q', '')\n    page = request.args.get('page', '1')\n    results = perform_search(query, int(page))\n\n    # Developer used escape() on the query but forgot to escape result snippets\n    # which come from user-generated content in the database\n    template = '''\n    <html>\n    <body>\n      <h1>Search results for: {{ query }}</h1>\n      <div class=\"results\">\n        {% for result in results %}\n          <div class=\"result\">\n            <a href=\"{{ result.url }}\">{{ result.title }}</a>\n            <p class=\"snippet\">''' + '{{ result.snippet|safe }}' + '''</p>\n          </div>\n        {% endfor %}\n      </div>\n      <div class=\"pagination\">\n        <a href=\"/search?q={{ query }}&page={{ next_page }}\">Next</a>\n      </div>\n    </body>\n    </html>\n    '''\n    return render_template_string(\n        template,\n        query=query,\n        results=results,\n        next_page=int(page) + 1\n    )\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-79",
+        "severity": "high",
+        "location": {
+          "file": "app/views/search.py",
+          "line_start": 24,
+          "line_end": 24
+        },
+        "description": "Result snippet marked as |safe in Jinja2 template, bypassing auto-escaping. Since snippets originate from user-generated database content, this enables stored XSS",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-79",
+        "severity": "medium",
+        "location": {
+          "file": "app/views/search.py",
+          "line_start": 34,
+          "line_end": 39
+        },
+        "description": "Using render_template_string with dynamically constructed template string. While Jinja2 auto-escaping protects most variables, the |safe filter on line 24 and the string concatenation pattern create injection risk",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

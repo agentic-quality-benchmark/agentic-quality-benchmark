@@ -1,0 +1,47 @@
+{
+  "id": "security-path-traversal-002",
+  "domain": "security",
+  "category": "path-traversal",
+  "language": "java",
+  "difficulty": 4,
+  "files": [
+    {
+      "path": "src/main/java/com/acme/service/TemplateService.java",
+      "content": "package com.acme.service;\n\nimport java.io.IOException;\nimport java.nio.file.Files;\nimport java.nio.file.Path;\nimport java.nio.file.Paths;\nimport org.springframework.stereotype.Service;\n\n@Service\npublic class TemplateService {\n    private static final String TEMPLATE_DIR = \"/opt/app/templates\";\n\n    /**\n     * Load a template by name. The name is expected to be a simple\n     * filename like \"welcome.html\" or a subdirectory path like\n     * \"emails/reset-password.html\".\n     */\n    public String loadTemplate(String templateName) throws IOException {\n        // Developer attempts to sanitize by removing \"..\" sequences\n        String sanitized = templateName.replace(\"..\", \"\");\n\n        Path templatePath = Paths.get(TEMPLATE_DIR, sanitized);\n\n        // Check that the resolved path exists\n        if (!Files.exists(templatePath)) {\n            throw new IOException(\"Template not found: \" + templateName);\n        }\n\n        return Files.readString(templatePath);\n    }\n\n    /**\n     * Load a template with locale support.\n     */\n    public String loadLocalizedTemplate(String templateName, String locale) throws IOException {\n        // Locale is user-controlled from Accept-Language header\n        String localePath = locale + \"/\" + templateName;\n        return loadTemplate(localePath);\n    }\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-22",
+        "severity": "high",
+        "location": {
+          "file": "src/main/java/com/acme/service/TemplateService.java",
+          "line_start": 20,
+          "line_end": 20
+        },
+        "description": "Insufficient path traversal sanitization. Replacing '..' with empty string can be bypassed with '..../' which becomes '../' after replacement. The resolved path is not verified to be within TEMPLATE_DIR",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-22",
+        "severity": "high",
+        "location": {
+          "file": "src/main/java/com/acme/service/TemplateService.java",
+          "line_start": 37,
+          "line_end": 37
+        },
+        "description": "User-controlled locale value from Accept-Language header used to construct file path. Combined with the weak sanitization in loadTemplate, this provides an additional injection point",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

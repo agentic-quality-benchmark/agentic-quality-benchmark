@@ -1,0 +1,33 @@
+{
+  "id": "security-adversarial-negative-003",
+  "domain": "security",
+  "category": "crypto-weakness",
+  "language": "go",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "internal/auth/token.go",
+      "content": "package auth\n\nimport (\n\t\"crypto/aes\"\n\t\"crypto/cipher\"\n\t\"crypto/rand\"\n\t\"encoding/base64\"\n\t\"fmt\"\n\t\"io\"\n)\n\n// TokenEncryptor provides AES-256-GCM encryption for authentication tokens.\ntype TokenEncryptor struct {\n\tkey []byte\n}\n\n// NewTokenEncryptor creates an encryptor with the given 32-byte key.\nfunc NewTokenEncryptor(key []byte) (*TokenEncryptor, error) {\n\tif len(key) != 32 {\n\t\treturn nil, fmt.Errorf(\"key must be exactly 32 bytes for AES-256\")\n\t}\n\treturn &TokenEncryptor{key: key}, nil\n}\n\n// Encrypt encrypts plaintext using AES-256-GCM with a random nonce.\nfunc (e *TokenEncryptor) Encrypt(plaintext []byte) (string, error) {\n\tblock, err := aes.NewCipher(e.key)\n\tif err != nil {\n\t\treturn \"\", fmt.Errorf(\"failed to create cipher: %w\", err)\n\t}\n\n\tgcm, err := cipher.NewGCM(block)\n\tif err != nil {\n\t\treturn \"\", fmt.Errorf(\"failed to create GCM: %w\", err)\n\t}\n\n\tnonce := make([]byte, gcm.NonceSize())\n\tif _, err := io.ReadFull(rand.Reader, nonce); err != nil {\n\t\treturn \"\", fmt.Errorf(\"failed to generate nonce: %w\", err)\n\t}\n\n\tciphertext := gcm.Seal(nonce, nonce, plaintext, nil)\n\treturn base64.StdEncoding.EncodeToString(ciphertext), nil\n}\n\n// Decrypt decrypts a base64-encoded AES-256-GCM ciphertext.\nfunc (e *TokenEncryptor) Decrypt(encoded string) ([]byte, error) {\n\tdata, err := base64.StdEncoding.DecodeString(encoded)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"invalid base64: %w\", err)\n\t}\n\n\tblock, err := aes.NewCipher(e.key)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to create cipher: %w\", err)\n\t}\n\n\tgcm, err := cipher.NewGCM(block)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to create GCM: %w\", err)\n\t}\n\n\tnonceSize := gcm.NonceSize()\n\tif len(data) < nonceSize {\n\t\treturn nil, fmt.Errorf(\"ciphertext too short\")\n\t}\n\n\tnonce, ciphertext := data[:nonceSize], data[nonceSize:]\n\treturn gcm.Open(nil, nonce, ciphertext, nil)\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [],
+    "false_positives": [
+      {
+        "location": {
+          "file": "internal/auth/token.go",
+          "line_start": 36,
+          "line_end": 38
+        },
+        "reason": "AES-256-GCM with a unique random nonce generated from crypto/rand for each encryption. This is a correct and recommended cryptographic pattern. The 32-byte key length is validated, and nonce uniqueness is ensured by reading from the cryptographic random source."
+      }
+    ]
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "adversarial_negative",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "security-xss-001",
+  "domain": "security",
+  "category": "xss",
+  "language": "typescript",
+  "difficulty": 1,
+  "files": [
+    {
+      "path": "src/components/UserProfile.tsx",
+      "content": "import React from 'react';\n\ninterface UserProfileProps {\n  user: {\n    name: string;\n    bio: string;\n    website: string;\n  };\n}\n\nexport function UserProfile({ user }: UserProfileProps) {\n  return (\n    <div className=\"user-profile\">\n      <h2>{user.name}</h2>\n      <div\n        className=\"bio\"\n        dangerouslySetInnerHTML={{ __html: user.bio }}\n      />\n      <a href={user.website}>Visit website</a>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-79",
+        "severity": "high",
+        "location": {
+          "file": "src/components/UserProfile.tsx",
+          "line_start": 17,
+          "line_end": 17
+        },
+        "description": "User-supplied 'bio' field rendered via dangerouslySetInnerHTML without sanitization, enabling stored XSS through user profile data",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

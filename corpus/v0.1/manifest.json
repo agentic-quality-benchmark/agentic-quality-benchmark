@@ -14,7 +14,7 @@
         "ssrf"
       ],
       "target_samples": 200,
-      "current_samples": 0,
+      "current_samples": 20,
       "status": "in-progress"
     },
     "defects": {
@@ -181,6 +181,6 @@
     "other": "10%"
   },
   "total_target_samples": 1680,
-  "total_current_samples": 0,
+  "total_current_samples": 20,
   "held_out_percentage": 30
 }

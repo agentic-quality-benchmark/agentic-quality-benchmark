@@ -188,25 +188,57 @@ export interface DomainMetrics {
   avg_latency_ms: number;
 }
 
+// ─── Agentic Supporting Types ───────────────────────────────────────────────
+
+/** Result of learning transfer measurement (Phase 1 vs Phase 2) */
+export interface LearningTransferResult {
+  cold_start_recall: number;
+  warm_start_recall: number;
+  delta_recall: number;
+  cold_start_findings: number;
+  warm_start_findings: number;
+  memory_size_bytes?: number;
+}
+
+/** Explanation quality assessment via LLM-as-judge + human validation */
+export interface ExplanationScore {
+  llm_judge_score: number;         // 1-5
+  human_validation_score?: number; // 1-5 (on sample)
+  inter_rater_kappa?: number;      // Cohen's kappa between LLM and human
+  sample_size: number;             // Number of explanations evaluated
+}
+
+/** Result of multi-agent swarm coordination (Phase 3) */
+export interface SwarmCoordinationResult {
+  single_agent_recall: number;
+  swarm_recall: number;
+  unique_findings_per_agent: number;
+  coordination_overhead_ms: number;
+  agent_count: number;
+  overlap_rate: number;            // Fraction of findings found by multiple agents
+}
+
 // ─── Agentic Metrics ────────────────────────────────────────────────────────
 
 export interface AgenticMetrics {
-  learning_transfer: {
-    cold_start_recall: number;
-    warm_start_recall: number;
-    delta_recall: number;
-  };
-  multi_agent: {
-    single_agent_recall: number;
-    swarm_recall: number;
-    unique_findings_per_agent: number;
-    coordination_overhead_ms: number;
-  };
-  explanation_quality: {
-    llm_judge_score: number;         // 1-5
-    human_validation_score?: number; // 1-5 (on sample)
-    inter_rater_kappa?: number;
-  };
+  /** 0-1: improvement after warmup (warm_start_recall - cold_start_recall) */
+  learning_transfer_score: number;
+  /** Rate of improvement across samples (slope of learning curve) */
+  learning_curve_slope: number;
+  /** 0-1: effectiveness of multi-agent coordination */
+  multi_agent_coordination_score: number;
+  /** 0-1: precision of reasoning in explanations */
+  explanation_quality_score: number;
+  /** 0-1: resistance to fabrication on clean code */
+  adversarial_robustness_score: number;
+  /** 0-1: how often agent corrects itself */
+  self_correction_rate: number;
+  /** 0-1: efficiency of tool/API usage */
+  tool_usage_efficiency: number;
+
+  learning_transfer: LearningTransferResult;
+  multi_agent: SwarmCoordinationResult;
+  explanation_quality: ExplanationScore;
   fix_quality: {
     fixes_attempted: number;
     fixes_compiled: number;
@@ -234,13 +266,15 @@ export interface AgenticMetrics {
 // ─── Scorecard ──────────────────────────────────────────────────────────────
 
 export interface Scorecard {
-  tool: string;
-  version: string;
+  tool_name: string;
+  tool_version: string;
   corpus_version: string;
-  timestamp: string;
-  overall: AQBMetrics;
-  domains: Record<Domain, DomainMetrics>;
-  difficulty: Record<Difficulty, { recall: number }>;
-  languages: Record<Language, { precision: number; recall: number }>;
+  run_date: string;                // ISO 8601
+  aggregate: AQBMetrics;
+  by_domain: Record<Domain, DomainMetrics>;
+  by_difficulty: Record<Difficulty, { recall: number }>;
+  by_language: Record<Language, { precision: number; recall: number; f1: number }>;
   agentic?: AgenticMetrics;
+  sample_count: number;
+  evaluation_duration_ms: number;
 }

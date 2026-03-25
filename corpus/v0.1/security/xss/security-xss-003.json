@@ -1,0 +1,47 @@
+{
+  "id": "security-xss-003",
+  "domain": "security",
+  "category": "xss",
+  "language": "go",
+  "difficulty": 4,
+  "files": [
+    {
+      "path": "internal/handlers/comment.go",
+      "content": "package handlers\n\nimport (\n\t\"html/template\"\n\t\"net/http\"\n\t\"strings\"\n\n\t\"github.com/acme/forum/internal/models\"\n\t\"github.com/acme/forum/internal/store\"\n)\n\nvar commentTemplate = template.Must(template.New(\"comment\").Parse(`\n<div class=\"comment\">\n\t<div class=\"author\">{{.Author}}</div>\n\t<div class=\"body\">{{.Body}}</div>\n\t<div class=\"metadata\">Posted: {{.CreatedAt}}</div>\n</div>\n`))\n\ntype CommentHandler struct {\n\tStore *store.CommentStore\n}\n\nfunc (h *CommentHandler) PostComment(w http.ResponseWriter, r *http.Request) {\n\tif r.Method != http.MethodPost {\n\t\thttp.Error(w, \"Method not allowed\", http.StatusMethodNotAllowed)\n\t\treturn\n\t}\n\n\tauthor := r.FormValue(\"author\")\n\tbody := r.FormValue(\"body\")\n\n\t// \"Sanitize\" by removing script tags - easily bypassed\n\tbody = strings.ReplaceAll(body, \"<script\", \"\")\n\tbody = strings.ReplaceAll(body, \"</script>\", \"\")\n\n\tcomment := &models.Comment{\n\t\tAuthor: author,\n\t\tBody:   body,\n\t}\n\n\tif err := h.Store.Save(comment); err != nil {\n\t\thttp.Error(w, \"Failed to save comment\", http.StatusInternalServerError)\n\t\treturn\n\t}\n\n\t// Render the saved comment back - template auto-escapes\n\tw.Header().Set(\"Content-Type\", \"text/html\")\n\tcommentTemplate.Execute(w, comment)\n}\n\nfunc (h *CommentHandler) RenderCommentRaw(w http.ResponseWriter, r *http.Request) {\n\tid := r.URL.Query().Get(\"id\")\n\tcomment, err := h.Store.FindByID(id)\n\tif err != nil {\n\t\thttp.Error(w, \"Comment not found\", http.StatusNotFound)\n\t\treturn\n\t}\n\n\t// Dangerous: writing raw HTML without template escaping\n\tw.Header().Set(\"Content-Type\", \"text/html\")\n\tw.Write([]byte(`<div class=\"comment\"><p>` + comment.Body + `</p></div>`))\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-79",
+        "severity": "high",
+        "location": {
+          "file": "internal/handlers/comment.go",
+          "line_start": 62,
+          "line_end": 62
+        },
+        "description": "Comment body written directly to HTTP response via string concatenation without HTML escaping. The RenderCommentRaw handler bypasses Go's html/template auto-escaping by writing raw bytes",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-79",
+        "severity": "medium",
+        "location": {
+          "file": "internal/handlers/comment.go",
+          "line_start": 33,
+          "line_end": 34
+        },
+        "description": "Insufficient sanitization using simple string replacement of script tags. Trivially bypassed with event handlers (onerror, onload), alternative tags (img, svg), or case variations (SCRIPT)",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

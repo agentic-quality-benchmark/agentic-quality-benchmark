@@ -1,0 +1,47 @@
+{
+  "id": "security-ssrf-001",
+  "domain": "security",
+  "category": "ssrf",
+  "language": "typescript",
+  "difficulty": 2,
+  "files": [
+    {
+      "path": "src/services/webhook-service.ts",
+      "content": "import axios from 'axios';\nimport { logger } from '../utils/logger';\n\ninterface WebhookConfig {\n  url: string;\n  secret: string;\n  events: string[];\n}\n\nexport class WebhookService {\n  async testWebhook(config: WebhookConfig): Promise<{ status: number; body: string }> {\n    logger.info(`Testing webhook endpoint: ${config.url}`);\n\n    try {\n      const response = await axios.post(config.url, {\n        event: 'test',\n        timestamp: new Date().toISOString(),\n      }, {\n        headers: {\n          'Content-Type': 'application/json',\n          'X-Webhook-Secret': config.secret,\n        },\n        timeout: 10000,\n      });\n\n      return { status: response.status, body: JSON.stringify(response.data) };\n    } catch (error: any) {\n      return { status: error.response?.status || 0, body: error.message };\n    }\n  }\n\n  async fetchRemoteConfig(configUrl: string): Promise<Record<string, unknown>> {\n    const response = await axios.get(configUrl);\n    return response.data;\n  }\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-918",
+        "severity": "high",
+        "location": {
+          "file": "src/services/webhook-service.ts",
+          "line_start": 15,
+          "line_end": 24
+        },
+        "description": "User-supplied URL passed directly to axios.post without validation. An attacker can specify internal network URLs (e.g., http://169.254.169.254/latest/meta-data/) to access cloud metadata services or internal APIs",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-918",
+        "severity": "high",
+        "location": {
+          "file": "src/services/webhook-service.ts",
+          "line_start": 33,
+          "line_end": 33
+        },
+        "description": "User-supplied configUrl passed directly to axios.get without URL validation or allowlisting. Enables SSRF to access internal services",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

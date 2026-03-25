@@ -233,6 +233,50 @@ All ADRs use the WH(Y) enhanced format with structured decision statements:
 - ALWAYS use `run_in_background: true` for agent Task calls
 - After spawning, STOP — do NOT poll or check status
 
+## Task Tracking with Beads
+
+This project uses **Beads** (`bd`) for structured task tracking with dependency-aware work queues.
+Beads is initialized in stealth mode (local `.beads/` directory, not committed to repo).
+
+### Essential Commands
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"  # Ensure bd is on PATH
+
+bd ready                    # What can I work on now? (no open blockers)
+bd list                     # All issues with hierarchy
+bd show <id>                # Full details of an issue
+bd update <id> --claim      # Claim a task (sets assignee + in_progress)
+bd close <id> --reason "Done: brief description"  # Complete a task
+bd dep tree <id>            # View dependency tree
+bd create "Title" -p 1 -t task --parent <epic-id>  # Create subtask
+```
+
+### Workflow Rules
+
+- ALWAYS run `bd ready` at session start to find actionable work
+- ALWAYS `bd update <id> --claim` before starting a task
+- ALWAYS `bd close <id> --reason "..."` when done
+- Use `bd dep add <child> <parent> --type blocks` for blocking dependencies
+- Use `--json` flag when consuming output programmatically
+- If you discover new work while implementing, use `bd create` with `--parent` to track it
+
+### Epic IDs (for reference)
+
+| ID | Epic |
+|----|------|
+| `kbu` | Shared Kernel & Core Types |
+| `62a` | Corpus Management |
+| `b4m` | Evaluation Engine |
+| `92d` | Adapter Layer |
+| `d9l` | Matching Engine |
+| `6aj` | Metrics & Scoring |
+| `69y` | Agentic Evaluation |
+| `m6k` | Leaderboard & Results |
+| `6z7` | CLI & API Gateway |
+| `iuj` | CI/CD Pipeline |
+| `189` | Testing Strategy |
+
 ## Agentic QE v3 Integration
 
 This project uses **Agentic QE v3** for quality engineering during development.

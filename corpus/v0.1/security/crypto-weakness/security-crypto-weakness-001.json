@@ -1,0 +1,58 @@
+{
+  "id": "security-crypto-weakness-001",
+  "domain": "security",
+  "category": "crypto-weakness",
+  "language": "python",
+  "difficulty": 2,
+  "files": [
+    {
+      "path": "app/auth/password_utils.py",
+      "content": "import hashlib\nimport os\nfrom typing import Tuple\n\n\ndef hash_password(password: str) -> Tuple[str, str]:\n    \"\"\"Hash a password for storage. Returns (hash, salt) tuple.\"\"\"\n    salt = os.urandom(16).hex()\n    password_hash = hashlib.md5((password + salt).encode()).hexdigest()\n    return password_hash, salt\n\n\ndef verify_password(password: str, stored_hash: str, salt: str) -> bool:\n    \"\"\"Verify a password against its stored hash and salt.\"\"\"\n    computed_hash = hashlib.md5((password + salt).encode()).hexdigest()\n    return computed_hash == stored_hash\n\n\ndef generate_session_token() -> str:\n    \"\"\"Generate a session token for authenticated users.\"\"\"\n    import random\n    import string\n    chars = string.ascii_letters + string.digits\n    return ''.join(random.choice(chars) for _ in range(32))\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-327",
+        "severity": "high",
+        "location": {
+          "file": "app/auth/password_utils.py",
+          "line_start": 9,
+          "line_end": 9
+        },
+        "description": "MD5 used for password hashing. MD5 is cryptographically broken and unsuitable for password storage. Should use bcrypt, scrypt, or argon2",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-327",
+        "severity": "high",
+        "location": {
+          "file": "app/auth/password_utils.py",
+          "line_start": 15,
+          "line_end": 15
+        },
+        "description": "MD5 used for password verification, consistent with the broken hash_password implementation",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-330",
+        "severity": "high",
+        "location": {
+          "file": "app/auth/password_utils.py",
+          "line_start": 24,
+          "line_end": 24
+        },
+        "description": "Session token generated using random.choice() which uses a non-cryptographic PRNG. Session tokens must use secrets.token_hex() or os.urandom() for cryptographic randomness",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

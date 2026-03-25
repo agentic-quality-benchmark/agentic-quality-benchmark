@@ -1,0 +1,47 @@
+{
+  "id": "security-command-injection-001",
+  "domain": "security",
+  "category": "command-injection",
+  "language": "python",
+  "difficulty": 2,
+  "files": [
+    {
+      "path": "app/services/image_processor.py",
+      "content": "import os\nimport subprocess\nfrom pathlib import Path\nfrom typing import Optional\n\nUPLOAD_DIR = Path(\"/var/app/uploads\")\nOUTPUT_DIR = Path(\"/var/app/processed\")\n\n\ndef resize_image(filename: str, width: int, height: int) -> Optional[str]:\n    \"\"\"Resize an uploaded image using ImageMagick's convert command.\"\"\"\n    input_path = UPLOAD_DIR / filename\n    output_path = OUTPUT_DIR / f\"resized_{filename}\"\n\n    if not input_path.exists():\n        return None\n\n    cmd = f\"convert {input_path} -resize {width}x{height} {output_path}\"\n    os.system(cmd)\n\n    return str(output_path) if output_path.exists() else None\n\n\ndef generate_thumbnail(filename: str) -> Optional[str]:\n    \"\"\"Generate a thumbnail for an uploaded image.\"\"\"\n    input_path = UPLOAD_DIR / filename\n    output_path = OUTPUT_DIR / f\"thumb_{filename}\"\n\n    if not input_path.exists():\n        return None\n\n    result = subprocess.run(\n        f\"convert {input_path} -thumbnail 150x150^ -gravity center -extent 150x150 {output_path}\",\n        shell=True,\n        capture_output=True\n    )\n\n    if result.returncode == 0:\n        return str(output_path)\n    return None\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-78",
+        "severity": "critical",
+        "location": {
+          "file": "app/services/image_processor.py",
+          "line_start": 18,
+          "line_end": 18
+        },
+        "description": "User-controlled filename interpolated into shell command string executed via os.system(). Attacker can inject arbitrary commands via crafted filenames (e.g., 'image.jpg; rm -rf /')",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-78",
+        "severity": "critical",
+        "location": {
+          "file": "app/services/image_processor.py",
+          "line_start": 32,
+          "line_end": 35
+        },
+        "description": "User-controlled filename interpolated into shell command string passed to subprocess.run with shell=True. Despite using subprocess instead of os.system, shell=True enables the same command injection",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

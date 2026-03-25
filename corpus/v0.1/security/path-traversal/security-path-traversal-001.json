@@ -1,0 +1,47 @@
+{
+  "id": "security-path-traversal-001",
+  "domain": "security",
+  "category": "path-traversal",
+  "language": "typescript",
+  "difficulty": 2,
+  "files": [
+    {
+      "path": "src/routes/files.ts",
+      "content": "import express from 'express';\nimport path from 'path';\nimport fs from 'fs/promises';\nimport { authenticate } from '../middleware/auth';\n\nconst router = express.Router();\nconst UPLOAD_DIR = '/var/app/uploads';\n\nrouter.get('/download/:filename', authenticate, async (req, res) => {\n  const { filename } = req.params;\n  const filePath = path.join(UPLOAD_DIR, filename);\n\n  try {\n    const stat = await fs.stat(filePath);\n    if (!stat.isFile()) {\n      return res.status(404).json({ error: 'File not found' });\n    }\n\n    res.setHeader('Content-Disposition', `attachment; filename=\"${filename}\"`);\n    res.sendFile(filePath);\n  } catch (err) {\n    res.status(404).json({ error: 'File not found' });\n  }\n});\n\nrouter.get('/view/:folder/:file', authenticate, async (req, res) => {\n  const { folder, file } = req.params;\n  const filePath = path.join(UPLOAD_DIR, folder, file);\n\n  try {\n    const content = await fs.readFile(filePath, 'utf-8');\n    res.json({ content });\n  } catch (err) {\n    res.status(404).json({ error: 'File not found' });\n  }\n});\n\nexport default router;\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-22",
+        "severity": "high",
+        "location": {
+          "file": "src/routes/files.ts",
+          "line_start": 11,
+          "line_end": 11
+        },
+        "description": "Filename from URL parameter joined to base directory without path traversal validation. An attacker can use '../' sequences to read arbitrary files (e.g., /download/../../etc/passwd)",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-22",
+        "severity": "high",
+        "location": {
+          "file": "src/routes/files.ts",
+          "line_start": 28,
+          "line_end": 28
+        },
+        "description": "Folder and file parameters from URL joined to base directory without path traversal validation. Both parameters can contain '../' sequences",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

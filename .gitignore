@@ -13,3 +13,7 @@ corpus/held-out/*
 !corpus/held-out/.gitkeep
 .claude-flow/
 .agentic-qe/
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db

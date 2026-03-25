@@ -1,0 +1,33 @@
+{
+  "id": "security-adversarial-negative-004",
+  "domain": "security",
+  "category": "path-traversal",
+  "language": "java",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "src/main/java/com/acme/service/FileDownloadService.java",
+      "content": "package com.acme.service;\n\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.nio.file.Files;\nimport java.nio.file.Path;\nimport java.nio.file.Paths;\nimport org.springframework.core.io.InputStreamResource;\nimport org.springframework.http.HttpHeaders;\nimport org.springframework.http.MediaType;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.stereotype.Service;\n\n@Service\npublic class FileDownloadService {\n    private static final Path UPLOAD_ROOT = Paths.get(\"/opt/app/uploads\").toAbsolutePath().normalize();\n\n    /**\n     * Safely download a file by name. The file must reside within UPLOAD_ROOT.\n     * Path traversal is prevented by resolving and normalizing the full path,\n     * then verifying it starts with the expected root directory.\n     */\n    public ResponseEntity<InputStreamResource> download(String filename) throws IOException {\n        // Resolve the requested filename against the upload root\n        Path requestedPath = UPLOAD_ROOT.resolve(filename).normalize();\n\n        // Critical security check: ensure resolved path is within allowed directory\n        if (!requestedPath.startsWith(UPLOAD_ROOT)) {\n            throw new SecurityException(\"Access denied: path traversal detected\");\n        }\n\n        // Verify the file exists and is a regular file\n        if (!Files.exists(requestedPath) || !Files.isRegularFile(requestedPath)) {\n            throw new IOException(\"File not found: \" + filename);\n        }\n\n        InputStream inputStream = Files.newInputStream(requestedPath);\n        String contentType = Files.probeContentType(requestedPath);\n        if (contentType == null) {\n            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;\n        }\n\n        HttpHeaders headers = new HttpHeaders();\n        headers.add(HttpHeaders.CONTENT_DISPOSITION,\n            \"attachment; filename=\\\"\" + requestedPath.getFileName().toString() + \"\\\"\");\n\n        return ResponseEntity.ok()\n            .headers(headers)\n            .contentType(MediaType.parseMediaType(contentType))\n            .body(new InputStreamResource(inputStream));\n    }\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [],
+    "false_positives": [
+      {
+        "location": {
+          "file": "src/main/java/com/acme/service/FileDownloadService.java",
+          "line_start": 25,
+          "line_end": 25
+        },
+        "reason": "Path.resolve() is used with user input, but the result is immediately normalized and checked against UPLOAD_ROOT using startsWith(). This is the correct Java idiom for path traversal prevention. The toAbsolutePath().normalize() on UPLOAD_ROOT and .normalize() on the resolved path ensure consistent comparison."
+      }
+    ]
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "adversarial_negative",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "security-adversarial-negative-001",
+  "domain": "security",
+  "category": "sql-injection",
+  "language": "python",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "app/repositories/user_repository.py",
+      "content": "from typing import Optional, List, Dict, Any\nimport psycopg2\nfrom psycopg2.extras import RealDictCursor\nfrom app.models.user import User, UserFilter\n\n\nclass UserRepository:\n    def __init__(self, connection):\n        self.conn = connection\n\n    def find_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:\n        with self.conn.cursor(cursor_factory=RealDictCursor) as cur:\n            cur.execute(\n                \"SELECT id, name, email, role, created_at FROM users WHERE id = %s\",\n                (user_id,)\n            )\n            return cur.fetchone()\n\n    def search(self, filters: UserFilter) -> List[Dict[str, Any]]:\n        conditions = []\n        params = []\n\n        if filters.name:\n            conditions.append(\"name ILIKE %s\")\n            params.append(f\"%{filters.name}%\")\n\n        if filters.role:\n            conditions.append(\"role = %s\")\n            params.append(filters.role)\n\n        if filters.created_after:\n            conditions.append(\"created_at >= %s\")\n            params.append(filters.created_after)\n\n        where_clause = \"WHERE \" + \" AND \".join(conditions) if conditions else \"\"\n        query = f\"SELECT id, name, email, role, created_at FROM users {where_clause} ORDER BY created_at DESC LIMIT 100\"\n\n        with self.conn.cursor(cursor_factory=RealDictCursor) as cur:\n            cur.execute(query, params)\n            return cur.fetchall()\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [],
+    "false_positives": [
+      {
+        "location": {
+          "file": "app/repositories/user_repository.py",
+          "line_start": 24,
+          "line_end": 25
+        },
+        "reason": "Dynamic query uses psycopg2's parameterized placeholders (%s) with a separate params list. The ILIKE pattern with f-string constructs the parameter value, not the query itself. The %s in the SQL is a psycopg2 placeholder, not Python string formatting."
+      },
+      {
+        "location": {
+          "file": "app/repositories/user_repository.py",
+          "line_start": 35,
+          "line_end": 36
+        },
+        "reason": "f-string constructs the WHERE clause structure from static condition strings (e.g., 'name ILIKE %s'). User values are never interpolated into the query text; they are passed via the params list to cur.execute()."
+      }
+    ]
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "adversarial_negative",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

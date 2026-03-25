@@ -309,6 +309,10 @@ A well-defined bounded context map enables:
 | Related | ADR-010 | Docker Isolation and Reproducibility | Infrastructure isolation for evaluation engine |
 | Related | ADR-013 | Testing Strategy | Testing approach spanning all bounded contexts |
 | Related | ADR-014 | Domain-Specific Evaluation Strategies | Per-domain evaluation customization across contexts |
+| Related | ADR-015 | Held-Out Corpus Security Model | Security model for held-out test set protection |
+| Related | ADR-016 | Error Handling and Recovery Strategy | Error classification and recovery across bounded contexts |
+| Related | ADR-017 | CI/CD Pipeline Design | Continuous integration and delivery for all contexts |
+| Related | ADR-018 | Versioning and Migration Strategy | Version management across shared kernel and corpus |
 
 ---
 

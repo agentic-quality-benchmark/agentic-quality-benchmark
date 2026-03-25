@@ -1,0 +1,36 @@
+{
+  "id": "security-sql-injection-003",
+  "domain": "security",
+  "category": "sql-injection",
+  "language": "java",
+  "difficulty": 4,
+  "files": [
+    {
+      "path": "src/main/java/com/acme/dao/ProductDAO.java",
+      "content": "package com.acme.dao;\n\nimport java.sql.*;\nimport java.util.ArrayList;\nimport java.util.List;\nimport com.acme.model.Product;\nimport com.acme.util.InputValidator;\n\npublic class ProductDAO {\n    private final Connection connection;\n    private final InputValidator validator;\n\n    public ProductDAO(Connection connection, InputValidator validator) {\n        this.connection = connection;\n        this.validator = validator;\n    }\n\n    public List<Product> findProducts(String category, String sortColumn, String sortOrder) throws SQLException {\n        List<Product> products = new ArrayList<>();\n\n        // Category is safely parameterized\n        String baseQuery = \"SELECT id, name, price, category FROM products WHERE category = ?\";\n\n        // Sort column validated against allowlist\n        String safeSortColumn = validator.validateSortColumn(sortColumn);\n\n        // Sort order NOT validated - developer assumed only ASC/DESC would be passed\n        String fullQuery = baseQuery + \" ORDER BY \" + safeSortColumn + \" \" + sortOrder;\n\n        PreparedStatement stmt = connection.prepareStatement(fullQuery);\n        stmt.setString(1, category);\n\n        ResultSet rs = stmt.executeQuery();\n        while (rs.next()) {\n            products.add(new Product(\n                rs.getLong(\"id\"),\n                rs.getString(\"name\"),\n                rs.getBigDecimal(\"price\"),\n                rs.getString(\"category\")\n            ));\n        }\n        return products;\n    }\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-89",
+        "severity": "high",
+        "location": {
+          "file": "src/main/java/com/acme/dao/ProductDAO.java",
+          "line_start": 28,
+          "line_end": 28
+        },
+        "description": "Sort order parameter concatenated into SQL query without validation. While sort column is validated against an allowlist, the sortOrder parameter is directly appended, allowing injection after ORDER BY clause",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

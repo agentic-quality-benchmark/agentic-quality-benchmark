@@ -1,0 +1,47 @@
+{
+  "id": "security-command-injection-002",
+  "domain": "security",
+  "category": "command-injection",
+  "language": "typescript",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "src/services/git-service.ts",
+      "content": "import { exec } from 'child_process';\nimport { promisify } from 'util';\nimport path from 'path';\n\nconst execAsync = promisify(exec);\nconst REPOS_DIR = '/var/app/repos';\n\ninterface CloneOptions {\n  repoUrl: string;\n  branch?: string;\n  depth?: number;\n}\n\nexport class GitService {\n  async cloneRepository(options: CloneOptions): Promise<string> {\n    const { repoUrl, branch, depth } = options;\n    const repoName = repoUrl.split('/').pop()?.replace('.git', '') || 'repo';\n    const targetDir = path.join(REPOS_DIR, repoName);\n\n    let cmd = `git clone ${repoUrl} ${targetDir}`;\n\n    if (branch) {\n      cmd += ` --branch ${branch}`;\n    }\n    if (depth) {\n      cmd += ` --depth ${depth}`;\n    }\n\n    await execAsync(cmd);\n    return targetDir;\n  }\n\n  async getCommitLog(repoPath: string, author?: string): Promise<string> {\n    const baseCmd = `git -C ${repoPath} log --oneline -20`;\n    const cmd = author ? `${baseCmd} --author=\"${author}\"` : baseCmd;\n\n    const { stdout } = await execAsync(cmd);\n    return stdout;\n  }\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-78",
+        "severity": "critical",
+        "location": {
+          "file": "src/services/git-service.ts",
+          "line_start": 20,
+          "line_end": 20
+        },
+        "description": "User-controlled repoUrl interpolated directly into shell command. An attacker can inject commands via a crafted URL like 'https://evil.com/repo.git; malicious-command'",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-78",
+        "severity": "critical",
+        "location": {
+          "file": "src/services/git-service.ts",
+          "line_start": 35,
+          "line_end": 35
+        },
+        "description": "User-controlled 'author' parameter embedded in shell command string within double quotes. Attacker can break out with '$(command)' or backtick injection",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

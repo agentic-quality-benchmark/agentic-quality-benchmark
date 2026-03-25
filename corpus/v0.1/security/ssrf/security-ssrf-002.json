@@ -1,0 +1,47 @@
+{
+  "id": "security-ssrf-002",
+  "domain": "security",
+  "category": "ssrf",
+  "language": "go",
+  "difficulty": 4,
+  "files": [
+    {
+      "path": "internal/services/proxy.go",
+      "content": "package services\n\nimport (\n\t\"fmt\"\n\t\"io\"\n\t\"net\"\n\t\"net/http\"\n\t\"net/url\"\n\t\"strings\"\n\t\"time\"\n)\n\nvar blockedPrefixes = []string{\n\t\"http://169.254.\",\n\t\"http://10.\",\n\t\"http://172.16.\",\n\t\"http://192.168.\",\n\t\"http://127.\",\n\t\"http://localhost\",\n}\n\ntype ProxyService struct {\n\tClient *http.Client\n}\n\nfunc NewProxyService() *ProxyService {\n\treturn &ProxyService{\n\t\tClient: &http.Client{\n\t\t\tTimeout: 30 * time.Second,\n\t\t},\n\t}\n}\n\nfunc (s *ProxyService) FetchURL(targetURL string) ([]byte, error) {\n\t// Validate URL scheme\n\tparsed, err := url.Parse(targetURL)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"invalid URL: %w\", err)\n\t}\n\n\tif parsed.Scheme != \"http\" && parsed.Scheme != \"https\" {\n\t\treturn nil, fmt.Errorf(\"only http/https schemes allowed\")\n\t}\n\n\t// Block known internal IP prefixes\n\tlowerURL := strings.ToLower(targetURL)\n\tfor _, prefix := range blockedPrefixes {\n\t\tif strings.HasPrefix(lowerURL, prefix) {\n\t\t\treturn nil, fmt.Errorf(\"internal addresses are blocked\")\n\t\t}\n\t}\n\n\t// Vulnerability: DNS rebinding bypass - the hostname is checked at\n\t// request time but DNS can resolve to an internal IP after the check.\n\t// Also: the blocklist is incomplete (missing IPv6, 0.0.0.0, decimal\n\t// IP notation like http://2130706433, and https:// variants).\n\tresp, err := s.Client.Get(targetURL)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"fetch failed: %w\", err)\n\t}\n\tdefer resp.Body.Close()\n\n\treturn io.ReadAll(resp.Body)\n}\n\nfunc (s *ProxyService) IsInternalIP(host string) bool {\n\tips, err := net.LookupIP(host)\n\tif err != nil {\n\t\treturn false\n\t}\n\n\tfor _, ip := range ips {\n\t\tif ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() {\n\t\t\treturn true\n\t\t}\n\t}\n\treturn false\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-918",
+        "severity": "high",
+        "location": {
+          "file": "internal/services/proxy.go",
+          "line_start": 45,
+          "line_end": 51
+        },
+        "description": "SSRF protection via URL prefix blocklist is incomplete and bypassable. Missing: IPv6 addresses (::1, [::ffff:127.0.0.1]), decimal IP notation (http://2130706433), octal notation (http://0177.0.0.1), https:// variants of blocked prefixes, and 0.0.0.0",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-918",
+        "severity": "high",
+        "location": {
+          "file": "internal/services/proxy.go",
+          "line_start": 57,
+          "line_end": 57
+        },
+        "description": "DNS rebinding vulnerability. The URL prefix check happens before the HTTP request, but DNS resolution during the request can return a different (internal) IP. The IsInternalIP helper exists but is never called before fetching",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

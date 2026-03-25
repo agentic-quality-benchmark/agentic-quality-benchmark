@@ -1,0 +1,47 @@
+{
+  "id": "security-sql-injection-001",
+  "domain": "security",
+  "category": "sql-injection",
+  "language": "typescript",
+  "difficulty": 1,
+  "files": [
+    {
+      "path": "src/db/users.ts",
+      "content": "import { Pool } from 'pg';\nimport { logger } from '../utils/logger';\n\nconst pool = new Pool({ connectionString: process.env.DATABASE_URL });\n\nexport async function getUserById(userId: string): Promise<Record<string, unknown> | null> {\n  logger.info(`Fetching user: ${userId}`);\n  const query = `SELECT id, name, email, role FROM users WHERE id = '${userId}'`;\n  const result = await pool.query(query);\n  return result.rows[0] || null;\n}\n\nexport async function searchUsers(namePattern: string): Promise<Record<string, unknown>[]> {\n  const query = `SELECT id, name, email FROM users WHERE name LIKE '%${namePattern}%'`;\n  const result = await pool.query(query);\n  return result.rows;\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-89",
+        "severity": "critical",
+        "location": {
+          "file": "src/db/users.ts",
+          "line_start": 8,
+          "line_end": 8
+        },
+        "description": "User-controlled 'userId' parameter directly interpolated into SQL query string via template literal, enabling SQL injection",
+        "fix_available": true
+      },
+      {
+        "type": "CWE-89",
+        "severity": "critical",
+        "location": {
+          "file": "src/db/users.ts",
+          "line_start": 14,
+          "line_end": 14
+        },
+        "description": "User-controlled 'namePattern' parameter directly interpolated into SQL LIKE clause via template literal, enabling SQL injection",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

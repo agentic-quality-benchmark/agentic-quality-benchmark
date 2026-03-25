@@ -1,0 +1,36 @@
+{
+  "id": "security-crypto-weakness-002",
+  "domain": "security",
+  "category": "crypto-weakness",
+  "language": "java",
+  "difficulty": 5,
+  "files": [
+    {
+      "path": "src/main/java/com/acme/crypto/TokenEncryptor.java",
+      "content": "package com.acme.crypto;\n\nimport javax.crypto.Cipher;\nimport javax.crypto.KeyGenerator;\nimport javax.crypto.SecretKey;\nimport javax.crypto.spec.GCMParameterSpec;\nimport javax.crypto.spec.SecretKeySpec;\nimport java.nio.ByteBuffer;\nimport java.security.SecureRandom;\nimport java.util.Base64;\n\npublic class TokenEncryptor {\n    private static final String ALGORITHM = \"AES/GCM/NoPadding\";\n    private static final int GCM_TAG_LENGTH = 128;\n    private static final int GCM_IV_LENGTH = 12;\n\n    // Reused IV defeats the purpose of GCM mode\n    private static final byte[] STATIC_IV = new byte[] {\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05,\n        0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B\n    };\n\n    private final SecretKey secretKey;\n\n    public TokenEncryptor(byte[] keyBytes) {\n        this.secretKey = new SecretKeySpec(keyBytes, \"AES\");\n    }\n\n    public String encrypt(String plaintext) throws Exception {\n        Cipher cipher = Cipher.getInstance(ALGORITHM);\n        GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, STATIC_IV);\n        cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);\n\n        byte[] ciphertext = cipher.doFinal(plaintext.getBytes(\"UTF-8\"));\n\n        ByteBuffer byteBuffer = ByteBuffer.allocate(GCM_IV_LENGTH + ciphertext.length);\n        byteBuffer.put(STATIC_IV);\n        byteBuffer.put(ciphertext);\n\n        return Base64.getEncoder().encodeToString(byteBuffer.array());\n    }\n\n    public String decrypt(String encryptedText) throws Exception {\n        byte[] decoded = Base64.getDecoder().decode(encryptedText);\n\n        ByteBuffer byteBuffer = ByteBuffer.wrap(decoded);\n        byte[] iv = new byte[GCM_IV_LENGTH];\n        byteBuffer.get(iv);\n        byte[] ciphertext = new byte[byteBuffer.remaining()];\n        byteBuffer.get(ciphertext);\n\n        Cipher cipher = Cipher.getInstance(ALGORITHM);\n        GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);\n        cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);\n\n        return new String(cipher.doFinal(ciphertext), \"UTF-8\");\n    }\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [
+      {
+        "type": "CWE-327",
+        "severity": "critical",
+        "location": {
+          "file": "src/main/java/com/acme/crypto/TokenEncryptor.java",
+          "line_start": 18,
+          "line_end": 21
+        },
+        "description": "Static IV (initialization vector) reused for every AES-GCM encryption. GCM mode requires a unique nonce for each encryption with the same key; nonce reuse enables full plaintext recovery and authentication key extraction. This is a subtle but catastrophic cryptographic failure",
+        "fix_available": true
+      }
+    ],
+    "false_positives": []
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "synthetic",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}

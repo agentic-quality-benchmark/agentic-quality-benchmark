@@ -1,0 +1,33 @@
+{
+  "id": "security-adversarial-negative-002",
+  "domain": "security",
+  "category": "xss",
+  "language": "typescript",
+  "difficulty": 3,
+  "files": [
+    {
+      "path": "src/components/CommentList.tsx",
+      "content": "import React from 'react';\nimport DOMPurify from 'dompurify';\n\ninterface Comment {\n  id: string;\n  author: string;\n  body: string;\n  createdAt: string;\n}\n\ninterface CommentListProps {\n  comments: Comment[];\n}\n\nexport function CommentList({ comments }: CommentListProps) {\n  return (\n    <div className=\"comment-list\">\n      {comments.map((comment) => (\n        <article key={comment.id} className=\"comment\">\n          <header>\n            <span className=\"author\">{comment.author}</span>\n            <time dateTime={comment.createdAt}>\n              {new Date(comment.createdAt).toLocaleDateString()}\n            </time>\n          </header>\n          <div\n            className=\"comment-body\"\n            dangerouslySetInnerHTML={{\n              __html: DOMPurify.sanitize(comment.body, {\n                ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'],\n                ALLOWED_ATTR: ['href'],\n              }),\n            }}\n          />\n        </article>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ],
+  "ground_truth": {
+    "issues": [],
+    "false_positives": [
+      {
+        "location": {
+          "file": "src/components/CommentList.tsx",
+          "line_start": 28,
+          "line_end": 33
+        },
+        "reason": "dangerouslySetInnerHTML is used, but the content is sanitized through DOMPurify.sanitize() with a strict allowlist of safe HTML tags and attributes. DOMPurify is a well-tested sanitization library and this configuration is appropriately restrictive."
+      }
+    ]
+  },
+  "metadata": {
+    "source": "synthetic",
+    "sourcing_method": "adversarial_negative",
+    "human_verified": true,
+    "verification_date": "2026-03-09",
+    "verified_by": ["aqb-team", "security-reviewer"]
+  }
+}
